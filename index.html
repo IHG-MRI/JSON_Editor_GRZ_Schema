@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>JSON Editor Interactive Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/ace.js"></script>
+    <script src="./polyfills/assign.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+    <script src="./scripts/ajv-validator.js"></script>
+    <link rel='stylesheet' id='theme-link'>
+    <link rel='stylesheet' id='iconlib-link'>
+</head>
+<body>
+<div class="container grid-xl" style="padding-top: 15px; padding-bottom: 30px;">
+    <div class="row columns md:flex">
+        <div class='col-7 col-md-7 w-7/12'>
+            <h1>Editor</h1>
+            <p>Below is the editor generated from the JSON Schema.</p>
+            <div id="json-editor-form"></div>
+        </div>
+        <div class='col-5 col-md-5 w-5/12'>
+            <div>
+                <a class="btn btn-primary" id="direct-link" title="preserves schema, value, and options">Direct Link</a>
+                <a class="btn btn-secondary" href="?" title="reload editor with default example settings">Reset</a>
+                <a class="btn btn-secondary" href="https://github.com/json-editor/json-editor" title="github" target="_blank">GitHub</a>
+            </div>
+            <h2>JSON Output</h2>
+            <p>You can also make changes to the JSON here and set the value in the editor by clicking "Update Form"</p>
+            <label for="output-textarea"></label>
+            <button class='btn btn-primary btn-block' id='setvalue'>Update Form</button>
+            <textarea id='output-textarea' rows="15" style="width: 100%; font-family: monospace;"
+                      class='form-control'></textarea>
+            <h2>Validation</h2>
+            <label for="validate-textarea">This will update whenever the form changes to show validation errors if there
+                are any.</label><br>
+            <textarea id='validate-textarea' rows="15" readonly disabled class='form-control'></textarea>
+            <!--<h2>Options</h2>
+            <div>
+                <label for="boolean-options-select">Boolean options</label><br>
+                <select multiple size="15" id="boolean-options-select" class="form-control browser-default">
+                    <option value='use_default_values'>Default values based on the "type"</option>
+                    <option value='use_name_attributes'>Use name attributes</option>
+                    <option value='prompt_before_delete'>Prompt before delete</option>
+                    <option value='case_sensitive_property_search'>Case sensitive property search</option>
+                    <option value='required_by_default'>Object properties required by default</option>
+                    <option value='display_required_only'>Only show required properties by default</option>
+                    <option value='show_opt_in'>Show optional properties (with checkbox)</option>
+                    <option value='no_additional_properties'>No additional object properties</option>
+                    <option value='ajax'>Allow loading schemas via Ajax</option>
+                    <option value='disable_edit_json'>Disable "Edit JSON" buttons</option>
+                    <option value='disable_collapse'>Disable collapse buttons</option>
+                    <option value='disable_properties'>Disable properties buttons</option>
+                    <option value='disable_array_add'>Disable array add buttons</option>
+                    <option value='disable_array_reorder'>Disable array move buttons</option>
+                    <option value='disable_array_delete'>Disable array delete buttons</option>
+                    <option value='enable_array_copy'>Add copy buttons to arrays</option>
+                    <option value='array_controls_top'>Array controls will be displayed at top of list</option>
+                    <option value='disable_array_delete_all_rows'>Disable array delete all rows buttons</option>
+                    <option value='disable_array_delete_last_row'>Disable array delete last row buttons</option>
+                </select> 
+            </div>
+            <div>
+                <label for="theme-select">theme</label><br>
+                <select id='theme-select' name="theme" class='form-control browser-default'>
+                    <option value='barebones'>Barebones</option>
+                    <option value='bootstrap3'>Bootstrap 3</option>
+                    <option value='bootstrap4'>Bootstrap 4</option>
+                    <option value='bootstrap5'>Bootstrap 5</option>
+                    <option value='html'>HTML</option>
+                    <option value='spectre'>Spectre</option>
+                    <option value='tailwind'>Tailwind</option>
+                </select>
+            </div>
+            <div>
+                <label for="iconlib-select">iconlib</label><br>
+                <select id='iconlib-select' name="iconlib" class='form-control browser-default'>
+                    <option value='fontawesome3'>fontawesome 3</option>
+                    <option value='fontawesome4'>fontawesome 4</option>
+                    <option value='fontawesome5'>fontawesome 5</option>
+                    <option value='jqueryui'>jQuery UI</option>
+                    <option value='openiconic'>Open Iconic</option>
+                    <option value='spectre'>Spectre</option>
+                    <option value='spectre'>Spectre</option>
+                    <option value='bootstrap'>Bootstrap</option>
+                </select>
+            </div>-->
+            <div>
+                <label for="object-layout-select">Object Layout</label><br>
+                <select id='object-layout-select' class='form-control browser-default'>
+                    <option value='normal'>normal</option>
+                    <option value='grid'>grid</option>
+                </select>
+            </div>
+            <div>
+                <label for="show-errors-select">Show Errors</label><br>
+                <select id='show-errors-select' class='form-control browser-default'>
+                    <option value='interaction'>On Interaction</option>
+                    <option value='change'>On Field Change</option>
+                    <option value='always'>Always</option>
+                    <option value='never'>Never</option>
+                </select>
+            </div>
+            <div>
+                <label for="lib-select"
+                       title="It's recommended that you click the Direct Link after changing these options">Include
+                    External Library</label><br>
+                <select multiple size="10" id='lib-select' class='form-control browser-default'
+                        title="It's reccomended that you click the Direct Link after changing these options">
+                    <option value='ace_editor'>Ace Editor</option>
+                    <option value='choices'>Choices</option>
+                    <option value='sceditor'>SCEditor</option>
+                    <option value='simplemde'>SimpleMDE</option>
+                    <option value='select2'>Select2</option>
+                    <option value='selectize'>Selectize</option>
+                    <option value='flatpickr'>Flatpickr</option>
+                    <option value='signature_pad'>Signature Pad</option>
+                    <option value='mathjs'>Math.js</option>
+                    <option value='cleavejs'>Cleave.js</option>
+                </select>
+            </div>
+        </div> 
+    </div> 
+    <h2>Schema</h2>
+
+    <div class="row columns md:flex">
+        <div class='col-7 col-md-7 w-7/12'>
+            <label for="schema-textarea">You can change the schema and see how the generated form looks. After you make changes, click "Update Schema"</label>
+            <button class='btn btn-primary btn-block' id='setschema'>Update Schema</button>
+            <textarea id='schema-textarea' style="height: 100vh;"></textarea>
+        </div>
+
+        <div class='col-5 col-md-5 w-5/12'>
+            <label for="je-errors-textarea">
+                <span>AJV (JE meta-schema): </span>
+                <code id="je-errors-count"></code>
+            </label>
+            <textarea id='je-errors-textarea'></textarea>
+
+            <br>
+
+            <label for="ajv-errors-textarea">
+                <span>AJV (meta-schema-2020-12): </span>
+                <code id="ajv-errors-count"></code>
+            </label>
+            <textarea id='ajv-errors-textarea'></textarea>
+        </div>
+    </div>
+</div>
+<script>
+  var defaultSchema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.1.4",
+  "title": "Metadata Submission Genomic Data Center (GRZ)",
+  "description": "General metadata schema for submissions to the GRZ",
+  "type": "object",
+  "required": [
+    "submission",
+    "donors"
+  ],
+  "properties": {
+    "submission": {
+      "type": "object",
+      "required": [
+        "submissionDate",
+        "submissionType",
+        "tanG",
+        "localCaseId",
+        "coverageType",
+        "submitterId",
+        "genomicDataCenterId",
+        "clinicalDataNodeId",
+        "diseaseType",
+        "genomicStudyType",
+        "genomicStudySubtype",
+        "labName"
+      ],
+      "properties": {
+        "submissionDate": {
+          "type": "string",
+          "description": "Date of submission in ISO 8601 format YYYY-MM-DD",
+          "format": "date"
+        },
+        "submissionType": {
+          "type": "string",
+          "description": "The options are: 'initial' for first submission, 'followup' is for followup submissions, 'addition' for additional submission, 'correction' for correction",
+          "enum": [
+            "initial",
+            "followup",
+            "addition",
+            "correction"
+          ]
+        },
+        "tanG": {
+          "type": "string",
+          "description": "The VNg of the genomic data of the index patient that will be reimbursed --> a unique 32-length byte code represented in a hex string of length 64.",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "localCaseId": {
+          "type": "string",
+          "description": "A local case identifier of the Leistungserbringer to be able to track multiple submissions referring to the same index patient"
+        },
+        "coverageType": {
+          "type": "string",
+          "description": "Health insurance providers",
+          "enum": [
+            "GKV",
+            "PKV",
+            "BG",
+            "SEL",
+            "SOZ",
+            "GPV",
+            "PPV",
+            "BEI",
+            "SKT",
+            "UNK"
+          ]
+        },
+        "submitterId": {
+          "type": "string",
+          "description": "Institutional ID of the submitter according to §293 SGB V.",
+          "pattern": "^[0-9]{9}$"
+        },
+        "genomicDataCenterId": {
+          "type": "string",
+          "description": "ID of the genomic data center in the format GRZXXXnnn.",
+          "pattern": "^(GRZ)[A-Z0-9]{3}[0-9]{3}$"
+        },
+        "clinicalDataNodeId": {
+          "type": "string",
+          "description": "ID of the clinical data node in the format KDKXXXnnn.",
+          "pattern": "^(KDK)[A-Z0-9]{3}[0-9]{3}$"
+        },
+        "diseaseType": {
+          "type": "string",
+          "description": "Type of the disease",
+          "enum": [
+            "oncological",
+            "rare",
+            "hereditary"
+          ]
+        },
+        "genomicStudyType": {
+          "type": "string",
+          "description": "whether additional persons are tested as well",
+          "enum": [
+            "single",
+            "duo",
+            "trio"
+          ]
+        },
+        "genomicStudySubtype": {
+          "type": "string",
+          "description": "whether tumor and/or germ-line are tested",
+          "enum": [
+            "tumor-only",
+            "tumor+germline",
+            "germline-only"
+          ]
+        },
+        "labName": {
+          "type": "string",
+          "description": "Name of the sequencing lab."
+        }
+      }
+    },
+    "donors": {
+      "type": "array",
+      "description": "List of donors including the index patient.",
+      "items": {
+        "type": "object",
+        "required": [
+          "donorPseudonym",
+          "gender",
+          "relation",
+          "mvConsent",
+          "labData"
+        ],
+        "properties": {
+          "donorPseudonym": {
+            "type": "string",
+            "description": "A unique identifier given by the Leistungserbringer for each donor of a single, duo or trio sequencing; the donorPseudonym needs to be identifiable by the Leistungserbringer in case of changes to the consents by one of the donors. For Index patient use TanG."
+          },
+          "gender": {
+            "type": "string",
+            "description": "Gender of the donor.",
+            "enum": [
+              "male",
+              "female",
+              "other",
+              "unknown"
+            ]
+          },
+          "relation": {
+            "type": "string",
+            "description": "Relationship of the donor in respect to the index patient, e.g. 'index', 'brother', 'mother', etc.",
+            "enum": [
+              "mother",
+              "father",
+              "brother",
+              "sister",
+              "child",
+              "index",
+              "other"
+            ]
+          },
+          "mvConsent": {
+            "type": "object",
+            "properties": {
+              "presentationDate": {
+                "type": "string",
+                "description": "Date of delivery. Date (in ISO 8601 format YYYY-MM-DD) on which the Model Project Declaration of Participation was presented to the patient, unless identical to the date of signature",
+                "format": "date"
+              },
+              "version": {
+                "type": "string",
+                "description": "Version of the declaration of participation. Name and version of the declaration of participation in the MV GenomSeq, e.g.: 'Patient Info TE Consent MVGenomSeq vers01'"
+              },
+              "scope": {
+                "type": "array",
+                "description": "Modules of the consent to MV: must have at least a permit of mvSequencing",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Consent or refusal to participate and consent, must be indicated for each option listed in the scope of consent.",
+                      "enum": [
+                        "permit",
+                        "deny"
+                      ]
+                    },
+                    "date": {
+                      "type": "string",
+                      "description": "Date of signature of the pilot projects consent; in ISO 8601 format YYYY-MM-DD.",
+                      "format": "date"
+                    },
+                    "domain": {
+                      "type": "string",
+                      "description": "Scope of consent or revocation.",
+                      "enum": [
+                        "mvSequencing",
+                        "reIdentification",
+                        "caseIdentification"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "date",
+                    "domain"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "version",
+              "scope"
+            ]
+          },
+          "researchConsents": {
+            "type": "array",
+            "description": "Research consents. Multiple declarations of consent are possible! Must be assigned to the respective data sets.",
+            "items": {
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "scope"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "type": "string",
+                  "description": "Schema version of de.medizininformatikinitiative.kerndatensatz.consent",
+                  "enum": [
+                    "2025.0.1"
+                  ]
+                },
+                "presentationDate": {
+                  "type": "string",
+                  "description": "Date of the delivery of the research consent in ISO 8601 format (YYYY-MM-DD)",
+                  "format": "date"
+                },
+                "scope": {
+                  "type": "object",
+                  "description": "Scope of the research consent in JSON format following the MII IG Consent v2025 FHIR schema. See 'https://www.medizininformatik-initiative.de/Kerndatensatz/KDS_Consent_V2025/MII-IG-Modul-Consent.html' and 'https://packages2.fhir.org/packages/de.medizininformatikinitiative.kerndatensatz.consent'."
+                }
+              }
+            }
+          },
+          "labData": {
+            "type": "array",
+            "description": "Lab data related to the donor.",
+            "items": {
+              "type": "object",
+              "required": [
+                "labDataName",
+                "tissueOntology",
+                "tissueTypeId",
+                "tissueTypeName",
+                "sampleDate",
+                "sampleConservation",
+                "sequenceType",
+                "sequenceSubtype",
+                "fragmentationMethod",
+                "libraryType",
+                "libraryPrepKit",
+                "libraryPrepKitManufacturer",
+                "sequencerModel",
+                "sequencerManufacturer",
+                "kitName",
+                "kitManufacturer",
+                "enrichmentKitManufacturer",
+                "enrichmentKitDescription",
+                "barcode",
+                "sequencingLayout"
+              ],
+              "properties": {
+                "labDataName": {
+                  "type": "string",
+                  "description": "Name/ID of the biospecimen e.g. 'Blut DNA normal'"
+                },
+                "tissueOntology": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "version"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the tissue ontology"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "Version of the tissue ontology"
+                    }
+                  }
+                },
+                "tissueTypeId": {
+                  "type": "string",
+                  "description": "Tissue ID according to the ontology in use."
+                },
+                "tissueTypeName": {
+                  "type": "string",
+                  "description": "Tissue name according to the ontology in use."
+                },
+                "sampleDate": {
+                  "type": "string",
+                  "description": "Date of sample in ISO 8601 format YYYY-MM-DD",
+                  "format": "date"
+                },
+                "sampleConservation": {
+                  "type": "string",
+                  "description": "Sample conservation",
+                  "enum": [
+                    "fresh-tissue",
+                    "cryo-frozen",
+                    "ffpe",
+                    "other",
+                    "unknown"
+                  ]
+                },
+                "sequenceType": {
+                  "type": "string",
+                  "description": "Type of sequence (DNA or RNA)",
+                  "enum": [
+                    "dna",
+                    "rna"
+                  ]
+                },
+                "sequenceSubtype": {
+                  "type": "string",
+                  "description": "Subtype of sequence (germline, somatic, etc.)",
+                  "enum": [
+                    "germline",
+                    "somatic",
+                    "other",
+                    "unknown"
+                  ]
+                },
+                "fragmentationMethod": {
+                  "type": "string",
+                  "description": "Fragmentation method",
+                  "enum": [
+                    "sonication",
+                    "enzymatic",
+                    "none",
+                    "other",
+                    "unknown"
+                  ]
+                },
+                "libraryType": {
+                  "type": "string",
+                  "description": "Library type",
+                  "enum": [
+                    "panel",
+                    "panel_lr",
+                    "wes",
+                    "wes_lr",
+                    "wgs",
+                    "wgs_lr",
+                    "wxs",
+                    "wxs_lr",
+                    "other",
+                    "unknown"
+                  ]
+                },
+                "libraryPrepKit": {
+                  "type": "string",
+                  "description": "Name/version of the library prepkit"
+                },
+                "libraryPrepKitManufacturer": {
+                  "type": "string",
+                  "description": "Library prep kit manufacturer"
+                },
+                "sequencerModel": {
+                  "type": "string",
+                  "description": "Name/version of the sequencer model"
+                },
+                "sequencerManufacturer": {
+                  "type": "string",
+                  "description": "Sequencer manufacturer"
+                },
+                "kitName": {
+                  "type": "string",
+                  "description": "Name/version of the sequencing kit"
+                },
+                "kitManufacturer": {
+                  "type": "string",
+                  "description": "Sequencing kit manufacturer"
+                },
+                "enrichmentKitManufacturer": {
+                  "type": "string",
+                  "description": "Manufacturer of the enrichment kit",
+                  "enum": [
+                    "Illumina",
+                    "Agilent",
+                    "Twist",
+                    "NEB",
+                    "other",
+                    "unknown",
+                    "none"
+                  ]
+                },
+                "enrichmentKitDescription": {
+                  "type": "string",
+                  "description": "Name/version of the enrichment kit"
+                },
+                "barcode": {
+                  "type": "string",
+                  "description": "The barcode used or 'na'"
+                },
+                "sequencingLayout": {
+                  "type": "string",
+                  "description": "The sequencing layout, aka the end type of sequencing.",
+                  "enum": [
+                    "single-end",
+                    "paired-end",
+                    "reverse",
+                    "other"
+                  ]
+                },
+                "tumorCellCount": {
+                  "type": "array",
+                  "description": "Tuple of tumor cell counts and how they were determined.",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "count",
+                      "method"
+                    ],
+                    "properties": {
+                      "count": {
+                        "type": "number",
+                        "description": "Tumor cell count in %",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "method": {
+                        "type": "string",
+                        "description": "Method used to determine cell count.",
+                        "enum": [
+                          "pathology",
+                          "bioinformatics",
+                          "other",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "sequenceData": {
+                  "type": "object",
+                  "description": "Sequence data generated from the wet lab experiment.",
+                  "required": [
+                    "bioinformaticsPipelineName",
+                    "bioinformaticsPipelineVersion",
+                    "referenceGenome",
+                    "percentBasesAboveQualityThreshold",
+                    "meanDepthOfCoverage",
+                    "minCoverage",
+                    "targetedRegionsAboveMinCoverage",
+                    "files",
+                    "nonCodingVariants",
+                    "callerUsed"
+                  ],
+                  "properties": {
+                    "bioinformaticsPipelineName": {
+                      "type": "string",
+                      "description": "Name of the bioinformatics pipeline used"
+                    },
+                    "bioinformaticsPipelineVersion": {
+                      "type": "string",
+                      "description": "Version or commit hash of the bioinformatics pipeline"
+                    },
+                    "referenceGenome": {
+                      "type": "string",
+                      "description": "Reference genome used according to the Genome Reference Consortium (https://www.ncbi.nlm.nih.gov/grc)",
+                      "enum": [
+                        "GRCh37",
+                        "GRCh38"
+                      ]
+                    },
+                    "percentBasesAboveQualityThreshold": {
+                      "type": "object",
+                      "description": "Percentage of bases with a specified minimum quality threshold, according to https://www.bfarm.de/SharedDocs/Downloads/DE/Forschung/modellvorhaben-genomsequenzierung/Qs-durch-GRZ.pdf?__blob=publicationFile",
+                      "properties": {
+                        "minimumQuality": {
+                          "type": "number",
+                          "description": "The minimum quality score threshold",
+                          "minimum": 0
+                        },
+                        "percent": {
+                          "type": "number",
+                          "description": "Percentage of bases that meet or exceed the minimum quality score",
+                          "minimum": 0,
+                          "maximum": 100
+                        }
+                      },
+                      "required": [
+                        "minimumQuality",
+                        "percent"
+                      ]
+                    },
+                    "meanDepthOfCoverage": {
+                      "type": "number",
+                      "description": "Mean depth of coverage",
+                      "minimum": 0
+                    },
+                    "minCoverage": {
+                      "type": "number",
+                      "description": "Minimum coverage",
+                      "minimum": 0
+                    },
+                    "targetedRegionsAboveMinCoverage": {
+                      "type": "number",
+                      "description": "Fraction of targeted regions that are above minimum coverage",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "nonCodingVariants": {
+                      "type": "boolean",
+                      "description": "The analysis includes non-coding variants -> true or false"
+                    },
+                    "callerUsed": {
+                      "type": "array",
+                      "description": "Caller that is used in the pipeline",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "version"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "Name of the caller used"
+                          },
+                          "version": {
+                            "type": "string",
+                            "description": "Version of the caller used"
+                          }
+                        }
+                      }
+                    },
+                    "files": {
+                      "type": "array",
+                      "description": "List of files generated and required in this analysis.",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "filePath",
+                          "fileType",
+                          "fileChecksum",
+                          "fileSizeInBytes"
+                        ],
+                        "if": {
+                          "properties": {
+                            "fileType": {
+                              "enum": [
+                                "bam",
+                                "fastq"
+                              ]
+                            }
+                          }
+                        },
+                        "then": {
+                          "required": [
+                            "readLength"
+                          ]
+                        },
+                        "properties": {
+                          "filePath": {
+                            "type": "string",
+                            "description": "Path relative to the submission root, e.g.: sequencing_data/patient_001/patient_001_dna.bam"
+                          },
+                          "fileType": {
+                            "type": "string",
+                            "description": "Type of the file; if BED file is submitted, only 1 file is allowed.",
+                            "enum": [
+                              "bam",
+                              "vcf",
+                              "bed",
+                              "fastq"
+                            ]
+                          },
+                          "checksumType": {
+                            "type": "string",
+                            "description": "Type of checksum algorithm used",
+                            "enum": [
+                              "sha256"
+                            ],
+                            "default": "sha256"
+                          },
+                          "fileChecksum": {
+                            "type": "string",
+                            "description": "checksum of the file",
+                            "pattern": "^[a-fA-F0-9]{64}$"
+                          },
+                          "fileSizeInBytes": {
+                            "type": "number",
+                            "description": "Size of the file in bytes",
+                            "minimum": 0
+                          },
+                          "readOrder": {
+                            "type": "string",
+                            "enum": [
+                              "R1",
+                              "R2"
+                            ],
+                            "description": "Indicates the read order for paired-end reads."
+                          },
+                          "readLength": {
+                            "type": "integer",
+                            "description": "The read length; in the case of long-read sequencing it is the rounded average read length.",
+                            "minimum": 0
+                          },
+                          "flowcellId": {
+                            "type": "string",
+                            "description": "Indicates the flow cell."
+                          },
+                          "laneId": {
+                            "type": "string",
+                            "description": "Indicates the lane"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+  // parse url -> merge options -> refreshUI() -> initJsoneditor() -> direct link
+
+  /* ------------------------------------------------------------------- data */
+
+  var data = {}
+
+  var defaultOptions = Object.assign({}, JSONEditor.defaults.options, {
+    iconlib: 'fontawesome5',
+    object_layout: 'normal',
+    schema: defaultSchema,
+    show_errors: 'interaction',
+    theme: 'bootstrap4',
+  })
+
+  var jsoneditor = null
+  var directLink = document.querySelector('#direct-link')
+
+  // var booleanOptionsSelect = document.querySelector('#boolean-options-select')
+  var head = document.getElementsByTagName('head')[0]
+  // var iconlibSelect = document.querySelector('#iconlib-select')
+  var iconlibLink = document.querySelector('#iconlib-link')
+  var libSelect = document.querySelector('#lib-select')
+  var jsonEditorForm = document.querySelector('#json-editor-form')
+  var objectLayoutSelect = document.querySelector('#object-layout-select')
+  var setSchema = document.querySelector('#setschema')
+  var setValue = document.querySelector('#setvalue')
+  var showErrorsSelect = document.querySelector('#show-errors-select')
+  // var themeSelect = document.querySelector('#theme-select')
+  var themeLink = document.querySelector('#theme-link')
+  var validateTextarea = document.querySelector('#validate-textarea')
+
+  var aceConfig = {
+    mode: 'ace/mode/json',
+    maxLines: Infinity,
+    minLines: 5,
+    showFoldWidgets: false,
+    showPrintMargin: false
+  }
+
+  var outputTextarea = ace.edit('output-textarea', aceConfig)
+  var schemaTextarea = ace.edit('schema-textarea', aceConfig)
+  var ajvErrorsTextarea = ace.edit('ajv-errors-textarea', aceConfig)
+  var jeErrorsTextarea = ace.edit('je-errors-textarea', aceConfig)
+  var ajvErrorsCount = document.querySelector('#ajv-errors-count')
+  var jeErrorsCount = document.querySelector('#je-errors-count')
+  var ajv = new AjvValidator()
+
+  const validateSchema = () => {
+    const dataToValidate = JSON.parse(schemaTextarea.getValue())
+    let errors
+
+    // AJV validation
+    ajvErrorsCount.textContent = '0'
+    errors = ajv.validate202012(dataToValidate)
+    ajvErrorsTextarea.setValue(JSON.stringify(errors, null, 2))
+    ajvErrorsCount.textContent = JSON.stringify(errors.length)
+    schemaTextarea.clearSelection(1)
+    ajvErrorsTextarea.clearSelection(1)
+
+    // JE validation with AJV
+    jeErrorsCount.textContent = '0'
+    errors = ajv.validateJeMetaSchema(dataToValidate)
+    jeErrorsTextarea.setValue(JSON.stringify(errors, null, 2))
+    jeErrorsCount.textContent = JSON.stringify(errors.length)
+    schemaTextarea.clearSelection(1)
+    jeErrorsTextarea.clearSelection(1)
+  }
+
+  /* -------------------------------------------------------------- parse url */
+
+  var parseUrl = function () {
+    var url = window.location.search
+    var queryParamsString = url.substring(1, url.length)
+    var queryParams = queryParamsString.split('&')
+
+    if (queryParamsString.length) {
+      queryParams.forEach(function (queryParam) {
+        var splittedParam = queryParam.split('=')
+        var param = splittedParam[0]
+        var value = splittedParam[1]
+
+        // data query param
+        if (param === 'data') {
+          // compress schema and value
+          try {
+            data = JSON.parse(LZString.decompressFromBase64(value))
+          } catch (reason) {
+          }
+        }
+      })
+    }
+
+    mergeOptions()
+  }
+
+  /* ----------------------------------------------------------- mergeOptions */
+
+  var mergeOptions = function () {
+    data.options = Object.assign(defaultOptions, data.options)
+    refreshUI()
+  }
+
+  /* -------------------------------------------------------------- refreshUI */
+
+  var refreshUI = function () {
+    // schema
+    schemaTextarea.setValue(JSON.stringify(data.options.schema, null, 2))
+    schemaTextarea.clearSelection(1)
+    validateSchema()
+
+    // theme
+    var themeMap = {
+      barebones: '',
+      bootstrap3: 'https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css',
+      bootstrap4: 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
+      bootstrap5: 'https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css',
+      html: '',
+      spectre: 'https://unpkg.com/spectre.css/dist/spectre.min.css',
+      tailwind: 'https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css'
+    }
+    themeLink.href = themeMap[data.options.theme]
+    // themeSelect.value = data.options.theme
+
+    // iconlLib
+    var iconLibMap = {
+      fontawesome3: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.css',
+      fontawesome4: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css',
+      fontawesome5: 'https://use.fontawesome.com/releases/v5.6.1/css/all.css',
+      jqueryui: 'https://code.jquery.com/ui/1.10.3/themes/south-street/jquery-ui.css',
+      openiconic: 'https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic.min.css',
+      spectre: 'https://unpkg.com/spectre.css/dist/spectre-icons.min.css',
+      bootstrap: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'
+    }
+    iconlibLink.href = iconLibMap[data.options.iconlib]
+    // iconlibSelect.value = data.options.iconlib
+
+    // object_layout
+    objectLayoutSelect.value = data.options.object_layout
+
+    // show_errors
+    showErrorsSelect.value = data.options.show_errors
+
+    // boolean values
+    //var booleanOptions = booleanOptionsSelect.children
+    //for (var i = 0; i < booleanOptions.length; i++) {
+    //  var booleanValue = booleanOptions[i]
+    // if (data.options[booleanValue.value]) {
+    //    booleanValue.selected = true
+    //  }
+    // }
+
+    // libs
+    var libMapping = {
+      ace_editor: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/ace-editor-builds@1.2.4/src-min-noconflict/ace.js'
+        ],
+        css: []
+      },
+      choices: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js'
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css'
+        ]
+      },
+      cleavejs: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/cleave.js@1.4.7/dist/cleave.min.js'
+        ],
+        css: []
+      },
+      sceditor: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js',
+          'https://cdn.jsdelivr.net/npm/sceditor@2.1.3/minified/sceditor.min.js',
+          'https://cdn.jsdelivr.net/npm/sceditor@2.1.3/minified/formats/bbcode.js',
+          'https://cdn.jsdelivr.net/npm/sceditor@2.1.3/minified/formats/xhtml.js'
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/npm/sceditor@2.1.3/minified/themes/default.min.css'
+        ]
+      },
+      simplemde: {
+        js: [
+          'https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js'
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css'
+        ]
+      },
+      select2: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js',
+          'https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/js/select2.min.js'
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/css/select2.min.css'
+        ]
+      },
+      selectize: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js',
+          'https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/js/standalone/selectize.min.js'
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/css/selectize.min.css',
+          'https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/css/selectize.default.min.css'
+        ]
+      },
+      flatpickr: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/flatpickr'
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css'
+        ]
+      },
+      signature_pad: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js'
+        ],
+        css: []
+      },
+      mathjs: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/mathjs@5.3.1/dist/math.min.js'
+        ],
+        css: []
+      },
+    }
+
+    if (data.selectedLibs || data.unselectedLibs) {
+
+      //var booleanOptions = booleanOptionsSelect.children
+      //for (var i = 0; i < booleanOptions.length; i++) {
+        //var booleanValue = booleanOptions[i]
+        //if (data.options[booleanValue.value]) {
+          //booleanValue.selected = true
+        //}
+      //}
+
+      var libSelectChildren = libSelect.children
+      for (var i = 0; i < libSelectChildren.length; i++) {
+        var child = libSelectChildren[i]
+        child.selected = data.selectedLibs.includes(child.value)
+      }
+
+      // remove libraries
+      data.unselectedLibs.forEach(function (selectedLib) {
+        var concat = libMapping[selectedLib].js.concat(libMapping[selectedLib].css)
+        concat.forEach(function () {
+          var className = '.external_' + selectedLib
+          var toRemove = head.querySelector(className)
+          if (toRemove) {
+            toRemove.parentNode.removeChild(toRemove)
+          }
+        })
+      })
+
+      // add libraries
+      data.selectedLibs.forEach(function (selectedLib) {
+        // add js
+        libMapping[selectedLib].js.forEach(function (js) {
+          var scriptElement = document.createElement('script')
+          scriptElement.type = 'text/javascript'
+          scriptElement.src = js
+          scriptElement.async = false
+          scriptElement.classList.add('external_' + selectedLib)
+          head.appendChild(scriptElement)
+        })
+        // add css
+        libMapping[selectedLib].css.forEach(function (css) {
+          var linkElement = document.createElement('link')
+          linkElement.setAttribute('rel', 'stylesheet')
+          linkElement.setAttribute('type', 'text/css')
+          linkElement.setAttribute('href', css)
+          linkElement.classList.add('external_' + selectedLib)
+          head.appendChild(linkElement)
+        })
+      })
+    }
+
+    initJsoneditor()
+  }
+
+  /* --------------------------------------------------------- initJsoneditor */
+
+  var initJsoneditor = function () {
+    // destroy old JSONEditor instance if exists
+    if (jsoneditor) {
+      jsoneditor.destroy()
+    }
+
+    // new instance of JSONEditor
+    jsoneditor = new window.JSONEditor(jsonEditorForm, data.options)
+
+    // listen for changes
+    jsoneditor.on('change', function () {
+      // output
+      var json = jsoneditor.getValue()
+      outputTextarea.setValue(JSON.stringify(json, null, 2))
+      outputTextarea.clearSelection(1)
+
+      // validate
+      var validationErrors = jsoneditor.validate()
+      if (validationErrors.length) {
+        validateTextarea.value = JSON.stringify(validationErrors, null, 2)
+      } else {
+        validateTextarea.value = 'valid'
+      }
+    })
+    updateDirectLink()
+  }
+
+  /* ------------------------------------------------------- updateDirectLink */
+
+  var updateDirectLink = function () {
+    var url = window.location.href.replace(/\?.*/, '')
+    url += '?data='
+    url += LZString.compressToBase64(JSON.stringify(data))
+    directLink.href = url
+  }
+
+  /* -------------------------------------------------------- event listeners */
+
+  setValue.addEventListener('click', function () {
+    jsoneditor.setValue(JSON.parse(outputTextarea.getValue()))
+  })
+
+  setSchema.addEventListener('click', function () {
+    try {
+      data.options.schema = JSON.parse(schemaTextarea.getValue())
+      validateSchema()
+    } catch (e) {
+      alert('Invalid Schema: ' + e.message)
+      return
+    }
+    refreshUI()
+  })
+
+  /*
+  themeSelect.addEventListener('change', function () {
+    data.options.theme = this.value || ''
+    refreshUI()
+  })
+
+  iconlibSelect.addEventListener('change', function () {
+    data.options.iconlib = this.value || ''
+    refreshUI()
+  })*/
+
+
+  objectLayoutSelect.addEventListener('change', function () {
+    data.options.object_layout = this.value || ''
+    refreshUI()
+  })
+
+  showErrorsSelect.addEventListener('change', function () {
+    data.options.show_errors = this.value || ''
+    refreshUI()
+  })
+
+/*
+  booleanOptionsSelect.addEventListener('change', function () {
+    var booleanOptions = this.children
+    for (var i = 0; i < booleanOptions.length; i++) {
+      data.options[booleanOptions[i].value] = booleanOptions[i].selected
+    }
+    refreshUI()
+  })*/
+
+  libSelect.addEventListener('change', function () {
+    data.selectedLibs = []
+    data.unselectedLibs = []
+
+    var libs = this.children
+
+    for (var i = 0; i < libs.length; i++) {
+      if (libs[i].selected) {
+        data.selectedLibs.push(libs[i].value)
+      } else {
+        data.unselectedLibs.push(libs[i].value)
+      }
+    }
+    refreshUI()
+  })
+
+  parseUrl()
+
+</script>
+</body>
+</html>
