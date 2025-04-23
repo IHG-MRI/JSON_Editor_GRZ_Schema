@@ -23,7 +23,7 @@
             <div>
                 <a class="btn btn-primary" id="direct-link" title="preserves schema, value, and options">Direct Link</a>
                 <a class="btn btn-secondary" href="?" title="reload editor with default example settings">Reset</a>
-                <a class="btn btn-secondary" href="https://github.com/json-editor/json-editor" title="github" target="_blank">GitHub</a>
+                <a class="btn btn-secondary" href="https://github.com/IHG-MRI/JSON_Editor_GRZ_Schema" title="github" target="_blank">GitHub</a>
             </div>
             <h2>JSON Output</h2>
             <p>You can also make changes to the JSON here and set the value in the editor by clicking "Update Form"</p>
@@ -101,7 +101,7 @@
                     <option value='never'>Never</option>
                 </select>
             </div>
-            <div>
+            <!--<div>
                 <label for="lib-select"
                        title="It's recommended that you click the Direct Link after changing these options">Include
                     External Library</label><br>
@@ -118,8 +118,8 @@
                     <option value='mathjs'>Math.js</option>
                     <option value='cleavejs'>Cleave.js</option>
                 </select>
-            </div>
-        </div> 
+	    </div>-->
+	</div>
     </div> 
     <h2>Schema</h2>
 
@@ -1150,7 +1150,7 @@
     refreshUI()
   })*/
 
-  libSelect.addEventListener('change', function () {
+/*  libSelect.addEventListener('change', function () {
     data.selectedLibs = []
     data.unselectedLibs = []
 
@@ -1164,7 +1164,7 @@
       }
     }
     refreshUI()
-  })
+  })*/
 
   parseUrl()
 
